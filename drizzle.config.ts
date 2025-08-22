@@ -9,3 +9,4 @@ export default defineConfig({
         url: process.env.NEXT_PUBLIC_NEON_DB_CONNECTION_STRING!,
     },
 });
+//this file help us to make connection with noen postgress database and digital orm

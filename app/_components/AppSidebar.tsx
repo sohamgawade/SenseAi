@@ -1,3 +1,4 @@
+"use client";
 import React from 'react'
 import {
     Sidebar,
@@ -5,77 +6,76 @@ import {
     SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
-    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import { Calendar, Inbox, Layers, UserCircleIcon, Wallet } from "lucide-react"
 import Image from 'next/image'
-import { usePathname } from 'next/navigation'
-
-const items = [
-    {
-        title: "Home",
-        url: "#",
-        icon: Home,
-    },
-    {
-        title: "Inbox",
-        url: "#",
-        icon: Inbox,
-    },
-    {
-        title: "Calendar",
-        url: "#",
-        icon: Calendar,
-    },
-    {
-        title: "Search",
-        url: "#",
-        icon: Search,
-    },
-    {
-        title: "Settings",
-        url: "#",
-        icon: Settings,
-    },
-]
+import { usePathname, useParams } from 'next/navigation'
+import Link from "next/link"
 
 export function AppSidebar() {
     const path = usePathname();
+    const { chatid } = useParams(); // ✅ get chatid from dynamic route
+
+    const items = [
+        {
+            title: "Workspace",
+            url: "/dashboard",
+            icon: Layers,
+        },
+        {
+            title: "AI Tools",
+            url: `/ai-tools/ai-chat/${chatid || "1"}`, // ✅ fallback if no chatid
+            icon: Inbox,
+        },
+        {
+            title: "My History",
+            url: "/history",
+            icon: Calendar,
+        },
+        {
+            title: "Billing",
+            url: "/billing",
+            icon: Wallet,
+        },
+        {
+            title: "Profile",
+            url: "/profile",
+            icon: UserCircleIcon,
+        },
+    ];
+
     return (
         <Sidebar>
             <SidebarHeader>
                 <div className='p-4'>
-                    <Image src={'./logo.svg'} alt='logo' width={100} height={100}
-                        className='w-full h-full' />
-                    <h2 className='text-sm text-gray-400 text-center'>Build Awesome</h2>
+                    <Image src={'/logo.png'} alt='logo' width={100} height={70}
+                        className='w-full' />
+                    <h2 className='text-sm text-gray-400 text-center mt-3'>Build Awesome Skills</h2>
                 </div>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
-
                     <SidebarGroupContent>
-                        <SidebarMenu className='mt-5'>
+                        <SidebarMenu className='mt-2'>
                             {items.map((item, index) => (
-                                // <SidebarMenuItem key={item.title} className='p-2'>
-                                //     <SidebarMenuButton asChild className=''>
-                                <a href={item.url} key={index} className={`p-2 text-lg flex gap-2 items-center
-                                 hover:bg-gray-100 rounded-lg ${path.includes(item.url) && 'bg-gray-200ß'}`}>
+                                <Link
+                                    href={item.url}
+                                    key={index}
+                                    className={`p-2 text-lg flex gap-2 items-center
+                                    hover:bg-gray-100 rounded-lg ${path === item.url ? 'bg-gray-200' : ''}`}
+                                >
                                     <item.icon className='h-5 w-5' />
                                     <span>{item.title}</span>
-                                </a>
-                                //     </SidebarMenuButton>
-                                // </SidebarMenuItem>
+                                </Link>
                             ))}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
             <SidebarFooter>
-                <h2 className='p-2 text-gray-400 text-sm'>Copyright @Tubeguruji</h2>
+                <h2 className='p-2 text-gray-400 text-sm'>Crafted by Soham Gawade</h2>
             </SidebarFooter>
         </Sidebar>
     )

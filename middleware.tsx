@@ -1,9 +1,11 @@
+//this file motive is to which route we have to make it public and which route we have protectit and protect by help of clerk authication
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
 const isPublicRoute = createRouteMatcher([
     '/sign-in(.*)',
     '/sign-up(.*)',
-    '/'
+    '/',
+    '/api/inngest'//you are telling that this is pulblic folder so dont need for authication
 ])
 
 export default clerkMiddleware(async (auth, req) => {
