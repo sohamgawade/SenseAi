@@ -9,7 +9,7 @@ import {
     SidebarHeader,
     SidebarMenu,
 } from "@/components/ui/sidebar"
-import { Calendar, Inbox, Layers, UserCircleIcon, Wallet } from "lucide-react"
+import { Calendar, Inbox, Layers, UserCircleIcon, Wallet  } from "lucide-react"
 import Image from 'next/image'
 import { usePathname, useParams } from 'next/navigation'
 import Link from "next/link"
@@ -17,7 +17,16 @@ import Link from "next/link"
 export function AppSidebar() {
     const path = usePathname();
     const { chatid } = useParams(); // ✅ get chatid from dynamic route
+  // Decide where "AI Tools" should point here chnages i have made at 3.10 min 
+  let aiToolsUrl = "/ai-tools"; // fallback
 
+  if (path.startsWith("/ai-tools/ai-chat")) {
+    aiToolsUrl = chatid
+      ? `/ai-tools/ai-chat/${chatid}`
+      : "/ai-tools/ai-chat";
+  } else if (path.startsWith("/ai-tools/ai-resume-analyzer")) {
+    aiToolsUrl = "/ai-tools/ai-resume-analyzer";
+  }
     const items = [
         {
             title: "Workspace",
@@ -25,15 +34,16 @@ export function AppSidebar() {
             icon: Layers,
         },
         {
-            title: "AI Tools",
-            url: `/ai-tools/ai-chat/${chatid || "1"}`, // ✅ fallback if no chatid
-            icon: Inbox,
-        },
-        {
+          title: "AI Tools",
+      url: aiToolsUrl,  // ✅ single link only
+      icon: Inbox,
+    },
+    {
             title: "My History",
             url: "/history",
             icon: Calendar,
-        },
+     },
+
         {
             title: "Billing",
             url: "/billing",

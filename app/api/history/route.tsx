@@ -5,23 +5,24 @@ import {HistoryTable} from '../../../configs/schema'
 import {currentUser} from '@clerk/nextjs/server'
 import { eq } from "drizzle-orm";
 
-export async function POST(req:any){
-    const {content,recordId}=await req.json();
-    const user=await currentUser();
-    try{
- //insert record
- const result=await db.insert(HistoryTable).values({
-    recordId:recordId,
-    content:content,
-    userEmail:user?.primaryEmailAddress?.emailAddress,
-    createdAt: new Date()     //(new Date()).toString()
- }).returning();
- return NextResponse.json(result)
-    }
-    catch(e){
- return NextResponse.json(e)
-    }
+export async function POST(req: any) {
+  const { content, recordId, aiAgentType } = await req.json();
+  const user = await currentUser();
+  try {
+    // Insert record
+    const result = await db.insert(HistoryTable).values({
+      recordId: recordId,
+      content: content,
+      userEmail: user?.primaryEmailAddress?.emailAddress,
+     createdAt: new Date(),
+      aiAgentType: aiAgentType
+    });
+    return NextResponse.json(result)
+  } catch (e) {
+    return NextResponse.json(e)
+  }
 }
+
 
 
 export async function PUT(req:any){

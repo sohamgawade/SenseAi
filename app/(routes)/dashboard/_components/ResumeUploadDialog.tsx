@@ -8,12 +8,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { File, Sparkles } from 'lucide-react'
+import { File, Loader2Icon, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 function ResumeUploadDialog({openResumeUpload,setOpenResumeDialog}:any) {
     const [file,setFile]=useState<any>();
+    const [loading,setLoading]=useState(false);
+    const router=useRouter();
     const onFileChange=(event:any)=>{
         const file=event.target.files?.[0];
         if(file)
@@ -24,16 +27,27 @@ function ResumeUploadDialog({openResumeUpload,setOpenResumeDialog}:any) {
 
     }
 
-    
-    const onUploadAndAnalyze=async()=>{
-        const recordId=uuidv4(); 
-        const formData=new FormData();
-        formData.append('recordId',recordId);
-        formData.append('resumeFile',file);
-        //send form data o backend server
-        const result=await axios.post('/api/ai-resume-agent',formData);
-        console.log(result.data);
-    }
+    const onUploadAndAnalyze = async () => {
+      setLoading(true);
+  const recordId = uuidv4();
+  const formData = new FormData();
+
+  formData.append("recordId", recordId);
+  formData.append("resumeFile", file);
+ // formData.append("aiAgentType", '/ai-tools/ai-resume-analyzer');
+
+  // send form data to backend server
+  const result = await axios.post("/api/ai-resume-agent", formData);
+
+  console.log(result.data);
+  setLoading(false);
+  router.push('/ai-tools/ai-resume-analyzer/'+recordId);
+  setOpenResumeDialog(false);
+
+};
+
+   
+ 
   return (
     <Dialog open={openResumeUpload} onOpenChange={setOpenResumeDialog}> 
 {/*<DialogTrigger>Open</DialogTrigger> */}
@@ -56,8 +70,8 @@ function ResumeUploadDialog({openResumeUpload,setOpenResumeDialog}:any) {
         <Button variant={'outline'}>
             Cancle
         </Button>
-        <Button  disabled={!file} onClick={onUploadAndAnalyze}>
-        <Sparkles/>    Upload & Analyze
+        <Button  disabled={!file||loading} onClick={onUploadAndAnalyze}>
+        {loading? <Loader2Icon className='animate-spin'/>:<Sparkles/> }   Upload & Analyze
         </Button>
     </DialogFooter>
   </DialogContent>
