@@ -2,36 +2,92 @@ import { report } from 'process';
 import React, { useState } from 'react'
 import { Sparkles } from "lucide-react";
 import ResumeUploadDialog from '@/app/(routes)/dashboard/_components/ResumeUploadDialog';
-function Report({ aiReport }: any) {
-    const [openResumeUpload,setOpenResumeDialog]=useState(false);
-  // Debug: Log the aiReport structure to console
-  console.log('aiReport structure:', aiReport);
 
-  // Helper function to safely get nested values from sections array
+function Report({ aiReport }: any) {
+    const [openResumeUpload, setOpenResumeDialog] = useState(false);
+  
+  // Debug: Log the aiReport structure to console
+  console.log('=== FULL aiReport structure ===');
+  console.log('aiReport:', JSON.stringify(aiReport, null, 2));
+  console.log('aiReport.sections type:', typeof aiReport?.sections);
+  console.log('aiReport.sections is array:', Array.isArray(aiReport?.sections));
+  console.log('================================');
+
+  // Early return if aiReport is not available
+  if (!aiReport) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Analyzing your resume...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ FIXED: Helper function to safely get nested values from sections array
   const getSectionData = (sectionName: string) => {
-    const section = aiReport?.sections?.find((s: any) => s[sectionName]);
-    return section?.[sectionName] || {};
+    console.log('Getting section data for:', sectionName);
+    console.log('aiReport.sections:', aiReport?.sections);
+    
+    if (!aiReport?.sections || !Array.isArray(aiReport.sections)) {
+      console.log('Sections is not an array or undefined');
+      return {};
+    }
+
+    // Find the object containing the sectionName
+    const sectionObj = aiReport.sections.find(
+      (s: any) => Object.keys(s)[0] === sectionName
+    );
+
+    if (!sectionObj) {
+      console.log(`No data found for ${sectionName}`);
+      return {};
+    }
+
+    const sectionData = sectionObj[sectionName] || {};
+    console.log('Section data:', sectionData);
+    
+    return sectionData;
   };
 
   const getScore = (sectionName: string) => {
     const sectionData = getSectionData(sectionName);
-    return sectionData?.score || 0;
+    const score = sectionData?.score || 0;
+    console.log(`Score for ${sectionName}:`, score);
+    return score;
   };
 
   const getComment = (sectionName: string) => {
     const sectionData = getSectionData(sectionName);
-    return sectionData?.comment || "No feedback available";
+    const comment = sectionData?.comment || "No feedback available";
+    console.log(`Comment for ${sectionName}:`, comment);
+    return comment;
   };
 
-  const getTips = (sectionName: string) => {
-    const sectionData = getSectionData(sectionName);
-    return sectionData?.tips_for_improvement || [];
-  };
-
-  const getWhatsGood = (sectionName: string) => {
-    const sectionData = getSectionData(sectionName);
-    return sectionData?.whats_good || [];
-  };
+  // Check if we have valid data to render
+  const hasValidData = aiReport && (aiReport.score !== undefined || aiReport.sections);
+  
+  if (!hasValidData) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="text-yellow-600 mb-4">
+          <i className="fas fa-exclamation-triangle text-2xl"></i>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">Analysis In Progress</h3>
+        <p className="text-gray-600 mb-4">
+          Your resume is being analyzed. This may take a few moments.
+        </p>
+        <button
+          type="button"
+          className="flex items-center gap-2 mx-auto text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 transition"
+          onClick={() => window.location.reload()}
+        >
+          Refresh Results <i className="fas fa-refresh ml-1"></i>
+        </button>
+      </div>
+    );
+  }
 
   // Helper function to get border and background color based on score
   const getBorderColor = (score: number) => {
@@ -66,51 +122,26 @@ function Report({ aiReport }: any) {
     }
   };
 
-  // Get global arrays safely
+  // Get global arrays safely (these come from the root level of aiReport, not sections)
+  const globalTipsForImprovement = aiReport?.tips_for_improvement || [];
+  const globalWhatsGood = aiReport?.whats_good || [];
   const globalNeedsImprovement = aiReport?.needs_improvement || [];
-  
-  // Collect all tips from all sections
-  // @ts-ignore
-  const allTips: string[] = [];
-  if (aiReport?.sections) {
-    aiReport.sections.forEach((section: any) => {
-      Object.keys(section).forEach(key => {
-        const tips = section[key]?.tips_for_improvement || [];
-        allTips.push(...tips);
-      });
-    });
-  }
-
-  // Collect all "what's good" from all sections
-  // @ts-ignore
-  const allWhatsGood: string[] = [];
-  if (aiReport?.sections) {
-    aiReport.sections.forEach((section: any) => {
-      Object.keys(section).forEach(key => {
-        const goods = section[key]?.whats_good || [];
-        allWhatsGood.push(...goods);
-      });
-    });
-  }
 
   return (
-    
-<div>
-<div>
-  {/* Header */}
-  <div className="flex justify-between items-center mb-6">
-    <h2 className="text-3xl font-extrabold text-gray-800 gradient-component-text">
-      AI Analysis Results
-    </h2>
-    <button
-      type="button"
-      className="flex items-center gap-2 text-white bg-black hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 transition"
-      onClick={()=>setOpenResumeDialog(true)}
-    >
-      Re-analyze <Sparkles className="w-4 h-4" />
-    </button>
-  </div>
-</div>
+    <div>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-800 gradient-component-text">
+          AI Analysis Results
+        </h1>
+        <button
+          type="button"
+          className="flex items-center gap-2 text-white bg-black hover:bg-gray-800 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 transition"
+          onClick={() => setOpenResumeDialog(true)}
+        >
+          Re-analyze <Sparkles className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* Overall Score */}
       <div className="p-5 bg-gradient-to-r from-[#BE575F] via-[#A338E3] to-[#AC76D6] rounded-xl">
@@ -136,7 +167,7 @@ function Report({ aiReport }: any) {
           ></div>
         </div>
         <p className="text-gray-200 text-sm">
-          Overall assessment: {aiReport?.overall_feedback || "Resume analysis completed successfully."}
+          {aiReport?.summary_comment || "Resume analysis completed successfully."}
         </p>
       </div>
 
@@ -204,9 +235,9 @@ function Report({ aiReport }: any) {
         <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center">
           <i className="fas fa-lightbulb text-orange-400 mr-2"></i> Tips for Improvement
         </h3>
-        {allTips.length > 0 ? (
+        {globalTipsForImprovement.length > 0 ? (
           <ol className="list-none space-y-4">
-            {allTips.map((tip: string, i: number) => (
+            {globalTipsForImprovement.map((tip: string, i: number) => (
               <li className="flex items-start" key={i}>
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold mr-3 text-xs">
                   {i + 1}
@@ -228,9 +259,9 @@ function Report({ aiReport }: any) {
           <h3 className="text-lg font-bold text-gray-700 mb-3 flex items-center">
             <i className="fas fa-thumbs-up text-green-500 mr-2"></i> What's Good
           </h3>
-          {allWhatsGood.length > 0 ? (
+          {globalWhatsGood.length > 0 ? (
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-2">
-              {allWhatsGood.map((good: string, i: number) => (
+              {globalWhatsGood.map((good: string, i: number) => (
                 <li key={i}>{good}</li>
               ))}
             </ul>
@@ -269,8 +300,9 @@ function Report({ aiReport }: any) {
         </button>
       </div>
 
-      <ResumeUploadDialog openResumeUpload={openResumeUpload} setOpenResumeDialog={ ()=>setOpenResumeDialog(false)}/>
+      <ResumeUploadDialog openResumeUpload={openResumeUpload} setOpenResumeDialog={() => setOpenResumeDialog(false)}/>
     </div>
   )
 }
-export default  Report;
+
+export default Report;
