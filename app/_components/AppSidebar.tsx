@@ -35,12 +35,12 @@ export function AppSidebar() {
         },
         {
           title: "AI Tools",
-      url: aiToolsUrl,  // ✅ single link only
+      url: "/ai-tools",  // ✅ single link only
       icon: Inbox,
     },
     {
             title: "My History",
-            url: "/history",
+            url: "/my-history",
             icon: Calendar,
      },
 

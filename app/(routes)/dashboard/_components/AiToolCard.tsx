@@ -10,6 +10,10 @@ import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import ResumeUploadDialog from './ResumeUploadDialog';
+import RoadmapGeneratorDialog from './RoadmapGeneratorDialog';
+
+
+
 interface TOOL {
     name: string;
     desc: string;
@@ -28,13 +32,18 @@ function AiToolCard({ tool }: AIToolProps) {
     const {user}=useUser();
     const router=useRouter();
 const [openResumeUpload,setOpenResumeUpload]=useState(false);
-
+const [openRoadmapDialog,setOpenRoadmapDialog]=useState(false);
     const onClickButton=async()=>{
     //create new record to history table
     if(tool.name=='AI Resume Analyzer')
     {
         setOpenResumeUpload(true);
   return ;
+    }
+    if(tool.path=='/ai-tools/ai-roadmap-agent')
+    {
+        setOpenRoadmapDialog(true);
+return ;
     }
     const result=await axios.post('/api/history',{
         recordId:id,
@@ -58,8 +67,15 @@ const [openResumeUpload,setOpenResumeUpload]=useState(false);
   </Button>
   <ResumeUploadDialog openResumeUpload= {openResumeUpload}
 setOpenResumeDialog={setOpenResumeUpload} />
-</div>
+ <RoadmapGeneratorDialog 
+ openDialog={openRoadmapDialog}
+ setOpenDialog={()=>setOpenRoadmapDialog(false)}
+ />
 
+
+
+</div>
+ 
     );
 }
 

@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
 import { inngest } from "../../../inngest/client";
-import { AiCareerAgent, AiResumeAgent } from "../../../inngest/functions";
+import { AiCareerAgent, AiResumeAgent, AIRoadmapAgent } from "../../../inngest/functions";
 
 
 export const { GET, POST, PUT } = serve({ 
@@ -9,6 +9,7 @@ export const { GET, POST, PUT } = serve({
     /* your functions will be passed here later! */ 
     //when we created the functions like functions.ts in that AiCareerAgent and all should be added here 
     AiCareerAgent, 
-    AiResumeAgent 
+    AiResumeAgent,
+    AIRoadmapAgent
   ], 
 });

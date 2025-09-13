@@ -4,6 +4,7 @@ import { inngest } from "./client";
 import { createAgent, gemini } from "@inngest/agent-kit";
 import ImageKit from "imagekit";
 import { db } from "@/configs/db";
+import { create } from "domain";
  
 export const AiCareerChatAgent = createAgent({
   name: 'AiCareerChatAgent',
@@ -41,7 +42,7 @@ Skills
 
 Each section should include:
 
-score (as percentage)
+score (as a percentage from 0 to 100)
 
 Optional comment about that section
 Tips for improvement (3-5 tips)
@@ -50,54 +51,39 @@ Needs Improvement (1-3 weaknesses)
 
 🖥️ Output JSON Schema:
 
-<button>Copy</button>
-<button>Edit</button>
-
 {
-  "score": 85,
-  "overall_feedback": "Excellent",
-  "summary_comment": "Your resume is strong, but there are areas to refine.",
+  "score": null,
+  "overall_feedback": "",
+  "summary_comment": "",
   "sections": [
     {
       "contact_info": {
-        "score": 95,
-        "comment": "Perfectly structured and complete."
+        "score": null,
+        "comment": ""
       }
     },
     {
       "experience": {
-        "score": 85,
-        "comment": "Strong bullet points and impact."
+        "score": null,
+        "comment": ""
       }
     },
     {
       "education": {
-        "score": 75,
-        "comment": "Consider adding more coursework."
+        "score": null,
+        "comment": ""
       }
     },
     {
       "skills": {
-        "score": 60,
-        "comment": "Expand on specific skill proficiencies."
+        "score": null,
+        "comment": ""
       }
     }
   ],
-  "tips_for_improvement": [
-    "Add more numbers and metrics to your experience section to show impact.",
-    "Tailor your professional summary to the job you're applying for.",
-    "Start bullet points with strong action verbs to make your achievements stand out."
-  ],
-  "whats_good": [
-    "Clear and professional formatting.",
-    "Clear and concise contact information.",
-    "Relevant work experience."
-  ],
-  "needs_improvement": [
-    "Skills section needs depth.",
-    "Some experience bullet points could be stronger.",
-    "Missing a professional summary/objective."
-  ]
+  "tips_for_improvement": [],
+  "whats_good": [],
+  "needs_improvement": []
 }
 `,
   model: gemini({
@@ -105,7 +91,6 @@ Needs Improvement (1-3 weaknesses)
     apiKey: process.env.GEMINI_API_KEY
   })
 });
-
 
 // Initialize ImageKit safely
 var imagekit = new ImageKit({
@@ -136,6 +121,53 @@ var imagekit = new ImageKit({
   //@ts-ignore. //to avoid error
   urlEndpoint : process.env.IMGAGEKIT_ENDPOINT_URL
 });
+//Create AiRoadmapGeneratoragent
+export const AIRoadmapGenratorAgent=createAgent({
+  name:'AIRoadmapGeneratorAgent',
+  description:'Generate Details Tree Like Flow Roadmap',
+  system:`Generate a React flow tree-structured learning roadmap for user input position/ skills the following format:
+ vertical tree structure with meaningful x/y positions to form a flow
+Structure should be similar to roadmap.sh layout
+Steps should be ordered from fundamentals to advanced
+Include branching for different specializations (if applicable)
+Each node must have a title, short description, and learning resource link
+Use unique IDs for all nodes and edges
+make it more specious node position,
+Response in JSON format
+{
+roadmapTitle:"",
+description:<3-5 Lines>,
+duration:"",
+initialNodes : [
+{
+id: '1',
+type: 'turbo',
+position: { x: 0, y: 0 },
+data: {
+title: 'Step Title',
+description: 'Short two-line explanation of what the step covers.',
+link: 'Helpful link for learning this step',
+},
+},
+...
+],
+initialEdges : [
+{
+id: 'e1-2',
+source: '1',
+target: '2',
+},
+...
+];
+}
+`,
+  model: gemini({
+    model: "gemini-2.0-flash",
+    apiKey: process.env.GEMINI_API_KEY
+  })
+});
+
+
 // AiResumeAgent
 export const AiResumeAgent = inngest.createFunction(
   { id: "AiResumeAgent" },
@@ -243,3 +275,34 @@ export const AiResumeAgent = inngest.createFunction(
     return SaveToDb;
   }
 );
+
+export const AIRoadmapAgent = inngest.createFunction(
+   {id:'AiRoadMapAgent'},
+   {event:'AiRoadMapAgent'}, // Change this to match what you're sending
+   async({event,step}) => {
+     const {roadmapId,userInput,userEmail} = event.data; // Remove await here too
+     const roadmapResult = await AIRoadmapGenratorAgent.run("UserInput:"+userInput);
+       // @ts-ignore
+        const rawContent = roadmapResult.output[0].content;
+
+        const rawContentJson = rawContent.replace('```json', '').replace('```', '');
+
+        const parseJson = JSON.parse(rawContentJson);
+
+     //return roadmapResult;
+     //Save to DB
+const saveToDb = await step.run('SaveToDb', async () => {
+  const result = await db.insert(HistoryTable).values({
+    recordId: roadmapId,
+    content: parseJson,
+    aiAgentType:'/ai-tools/ai-roadmap-agent',
+    createdAt: (new Date()),//is string not timestsmp
+    userEmail: userEmail,
+    metaData: userInput
+  });
+  console.log(result);
+  return parseJson
+})
+
+   }
+)
